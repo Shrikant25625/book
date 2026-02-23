@@ -14,7 +14,10 @@ const app = express();
 
 app.use(helmet());
 app.use(morgan('dev'));
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({
+    origin: process.env.CLIENT_URL || true, // 'true' reflects the request origin
+    credentials: true
+}));
 app.use(express.json());
 
 app.use(session({
@@ -27,6 +30,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+const PORT = process.env.PORT || 5000;
+
+// Trust proxy for Render/Vercel
+app.set('trust proxy', 1);
+
 // Routes
 app.use('/api/books', require('./routes/book.routes'));
 app.use('/api/shelves', require('./routes/shelf.routes'));
@@ -34,10 +42,18 @@ app.use('/api/reviews', require('./routes/review.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 
-const PORT = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => {
-        console.log('Connected to MongoDB');
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-    })
-    .catch(err => console.error(err));
+// Health check
+app.get('/health', (req, res) => res.send('OK'));
+
+// Start server first so Render/Health checks pass
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+
+    // Then connect to DB
+    mongoose.connect(process.env.MONGODB_URI)
+        .then(() => console.log('Connected to MongoDB Atlas'))
+        .catch(err => {
+            console.error('MongoDB Connection Error:', err);
+            // Don't exit, let the server stay alive so we can see logs
+        });
+});
