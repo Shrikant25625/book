@@ -54,6 +54,7 @@ exports.searchBooks = async (req, res) => {
 
         res.json([...localBooks, ...uniqueGoogleBooks]);
     } catch (err) {
+        console.error('searchBooks Error:', err);
         res.status(500).json({ message: err.message });
     }
 };
@@ -101,6 +102,7 @@ exports.getBookById = async (req, res) => {
 
         res.status(404).json({ message: 'Book not found' });
     } catch (err) {
+        console.error('getBookById Error:', err);
         res.status(500).json({ message: err.message });
     }
 };

@@ -43,7 +43,14 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 
 // Health check
-app.get('/health', (req, res) => res.send('OK'));
+app.get('/health', (req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+    res.json({
+        status: 'OK',
+        database: dbStatus,
+        nodeVersion: process.version
+    });
+});
 
 // Start server first so Render/Health checks pass
 app.listen(PORT, () => {
