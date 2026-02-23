@@ -20,7 +20,7 @@ app.use(helmet({
 }));
 app.use(morgan('dev'));
 app.use(cors({
-    origin: process.env.CLIENT_URL, // Explicit origin for credentials
+    origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, "") : true,
     credentials: true
 }));
 app.use(express.json());
