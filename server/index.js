@@ -12,28 +12,37 @@ require('./config/passport');
 
 const app = express();
 
-app.use(helmet());
+// Trust proxy for Render/Vercel (MUST be before session middleware)
+app.set('trust proxy', 1);
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(morgan('dev'));
 app.use(cors({
-    origin: process.env.CLIENT_URL || true, // 'true' reflects the request origin
+    origin: process.env.CLIENT_URL, // Explicit origin for credentials
     credentials: true
 }));
 app.use(express.json());
+
+const isProduction = process.env.NODE_ENV === 'production' || !!process.env.CLIENT_URL;
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // Set to true if using HTTPS
+    name: 'biblio.sid', // Custom cookie name
+    cookie: {
+        secure: isProduction, // true on Render
+        sameSite: isProduction ? 'none' : 'lax', // none for cross-site (Vercel -> Render)
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 const PORT = process.env.PORT || 5000;
-
-// Trust proxy for Render/Vercel
-app.set('trust proxy', 1);
 
 // Routes
 app.use('/api/books', require('./routes/book.routes'));
