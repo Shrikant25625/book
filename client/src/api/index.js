@@ -1,12 +1,14 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://book-1-mfoo.onrender.com/api';
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: BASE_URL,
     withCredentials: true
 });
 
 export const authAPI = {
-    login: () => window.location.href = 'http://localhost:5000/api/auth/google',
+    login: () => window.location.href = `${BASE_URL}/auth/google`,
     logout: () => api.get('/auth/logout')
 };
 
